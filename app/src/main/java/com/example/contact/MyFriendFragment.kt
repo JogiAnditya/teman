@@ -1,5 +1,7 @@
 package com.example.contact
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Message
 import android.view.LayoutInflater
@@ -12,6 +14,9 @@ import com.example.contact.data.AppDatabase
 import com.example.contact.data.MyFriendDao
 import kotlinx.android.synthetic.*
 import kotlinx.android.synthetic.main.friendlist.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.Observer
 
 class MyFriendFragment : Fragment() {
@@ -26,6 +31,7 @@ class MyFriendFragment : Fragment() {
 
     private var db: AppDatabase? = null
     private var myFriendDao: MyFriendDao? = null
+    lateinit var adapter: MyFriendAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.friendlist, container, false)
@@ -40,8 +46,11 @@ class MyFriendFragment : Fragment() {
         }
         listTeman = ArrayList()
         initLocalDB()
+        //initAdapter()
         //simulasiDataTeman()
-        tampilTeman()
+        //tampilTeman()
+        ambilDataTeman()
+
     }
 
     private fun initLocalDB() {
@@ -50,12 +59,19 @@ class MyFriendFragment : Fragment() {
     }
 
     private fun tampilTeman() {
-        listMyFriend.layoutManager = LinearLayoutManager(activity)
-        listMyFriend.adapter = MyFriendAdapter(activity!!, listTeman!!) {
-            val friend = it
+        rvMyFriends.layoutManager = LinearLayoutManager(activity)
+        rvMyFriends.adapter = MyFriendAdapter(activity!!, listTeman!!){
+            
         }
     }
+    private fun initAdapter() {
+        adapter = MyFriendAdapter(activity!!, listTeman){}
 
+
+        rvMyFriends.layoutManager = LinearLayoutManager(activity)
+        rvMyFriends.adapter = adapter
+
+    }
     private fun ambilDataTeman() {
         listTeman = ArrayList()
         myFriendDao?.ambilSemuaTeman()?.observe(this, androidx.lifecycle.Observer { r ->
@@ -96,5 +112,22 @@ class MyFriendFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         this.clearFindViewByIdCache()
+    }
+    private fun confrimDialog(friend: FriendList, position: Int) {
+        AlertDialog.Builder(activity!!)
+            .setTitle("Delete ${friend.nama}")
+            .setMessage("Do you really want to delete ${friend.nama} ?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes,
+                DialogInterface.OnClickListener { dialog, whichButton ->
+                    deleteFriend(friend)
+                    adapter.notifyItemRemoved(position)
+                }).show()
+    }
+
+    private fun deleteFriend(friend: FriendList): Job {
+        return GlobalScope.launch {
+            myFriendDao?.deleteFriend(friend)
+        }
     }
 }

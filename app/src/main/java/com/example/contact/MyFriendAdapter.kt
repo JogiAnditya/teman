@@ -4,17 +4,16 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.ScrollingTabContainerView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.my_friends_item.*
-import java.util.*
 
 
 class MyFriendAdapter(private val context: Context,
-                      private val item: List<FriendList>,
-                      private val listener: (FriendList) -> Unit) :
+                      private val item: List<FriendList>,private  val listener:(FriendList)->Unit) :
         RecyclerView.Adapter<MyFriendAdapter.ViewHolder>() {
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
     ViewHolder(context, LayoutInflater.from(context) .
@@ -28,13 +27,18 @@ class MyFriendAdapter(private val context: Context,
 
     class ViewHolder(val context: Context,
                      override val containerView: View) : RecyclerView.ViewHolder(containerView), LayoutContainer{
-        fun bindItem(item: FriendList, Listener: (FriendList) -> Unit){
+        fun bindItem(item: FriendList, Listener: (FriendList)->Unit){
             txtFriendName.text = item.nama
             txtFriendEmail.text = item.email
             txtFriendTelp.text = item.telp
-           // Glide.with(context).load(item,image).into(imgProfile)
-
-            //containerView.setOnClickListener( listener(item) )
+            Glide.with(context).load(item.image).into(imgProfile)
+           //Glide.with(context).load(item,image).into(imgProfile)
+            itemView.setOnClickListener { Listener(item) }
         }
+    }
+
+
+    interface MyFriendClickListener {
+        fun onLongClick(friend: FriendList, position: Int)
     }
 }
